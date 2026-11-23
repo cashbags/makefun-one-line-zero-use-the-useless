@@ -33,13 +33,18 @@ const LINE =
 
 // Guard the gate: entry.txt must be UTF-8 text of 1 to 200 Unicode code
 // points, not only white space. Fail loudly here rather than shipping
-// an entry the sealed scorer would refuse.
+// an entry the sealed scorer would refuse. The cap is a named constant so
+// the gate reads the same in code as it does in competition.yaml.
+const MAX_CODE_POINTS = 200;
 const codePoints = [...LINE].length;
-if (codePoints < 1 || codePoints > 200 || LINE.trim().length === 0) {
+if (codePoints < 1 || codePoints > MAX_CODE_POINTS || LINE.trim().length === 0) {
   throw new Error(`line is ${codePoints} code points, outside the 1-200 gate`);
 }
-if (LINE.includes('\n') || !LINE.endsWith('.')) {
-  throw new Error('line must be a single line ending in a period');
+// One line, one sentence: no embedded newline and no second sentence.
+// ("make.fun" style abbreviations are not used, so any ". " would be a
+// real sentence break.)
+if (LINE.includes('\n') || !LINE.endsWith('.') || LINE.slice(0, -1).includes('. ')) {
+  throw new Error('line must be a single line, a single sentence, ending in a period');
 }
 
 writeFileSync(join(OUTPUT_DIR, 'entry.txt'), LINE);
